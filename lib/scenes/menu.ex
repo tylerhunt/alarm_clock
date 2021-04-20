@@ -5,20 +5,11 @@ defmodule AlarmClock.Scene.Menu do
   alias Scenic.Graph
   alias Scenic.Primitive
   import Scenic.Primitives
-  import AlarmClock.Util
+
+  alias AlarmClock.Util
 
   @width 128
   @height 64
-
-  @days ~w(
-    MONDAY
-    TUESDAY
-    WEDNESDAY
-    THURSDAY
-    FRIDAY
-    SATURDAY
-    SUNDAY
-  )
 
   @parts %{
     hour: {9, (@height / 2) - 16},
@@ -66,7 +57,7 @@ defmodule AlarmClock.Scene.Menu do
     %{graph: graph} = state = %{
       alarm_day: alarm_day,
       part: @default_part,
-      graph: @graph |> Graph.modify(:day, &text(&1, format_day(alarm_day)))
+      graph: @graph |> Graph.modify(:day, &text(&1, Util.day_name(alarm_day)))
     }
 
     {:ok, state, push: graph}
@@ -91,7 +82,7 @@ defmodule AlarmClock.Scene.Menu do
       context.viewport,
       {
         AlarmClock.Scene.Menu,
-        state |> Map.put(:alarm_day, previous_alarm_day(alarm_day))
+        state |> Map.put(:alarm_day, Util.previous_alarm_day(alarm_day))
       }
     )
     {:halt, state}
@@ -107,7 +98,7 @@ defmodule AlarmClock.Scene.Menu do
   #    context.viewport,
   #    {
   #      AlarmClock.Scene.Menu,
-  #      state |> Map.put(:alarm_day, next_alarm_day(alarm_day))
+  #      state |> Map.put(:alarm_day, Util.next_alarm_day(alarm_day))
   #    }
   #  )
   #  {:halt, state}
@@ -158,11 +149,6 @@ defmodule AlarmClock.Scene.Menu do
   # --------------------------------------------------------
   def handle_input(_msg, _, graph) do
     {:noreply, graph}
-  end
-
-  # --------------------------------------------------------
-  defp format_day(day) do
-    Enum.at(@days, day - 1)
   end
 
   # --------------------------------------------------------

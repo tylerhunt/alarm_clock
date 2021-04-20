@@ -4,34 +4,11 @@ defmodule AlarmClock.Scene.Clock do
   alias Scenic.ViewPort
   alias Scenic.Graph
   import Scenic.Primitives
-  import AlarmClock.Util
+
+  alias AlarmClock.Util
 
   @width 128
   @height 64
-
-  @days ~w(
-    MONDAY
-    TUESDAY
-    WEDNESDAY
-    THURSDAY
-    FRIDAY
-    SATURDAY
-    SUNDAY
-  )
-  @months ~w(
-    JANUARY
-    FEBRUARY
-    MARCH
-    APRIL
-    MAY
-    JUNE
-    JULY
-    AUGUST
-    SEPTEMBER
-    OCTOBER
-    NOVEMBER
-    DECEMBER
-  )
 
   @graph Graph.build(font: :roboto_mono, font_size: 16)
          |> text(
@@ -90,7 +67,7 @@ defmodule AlarmClock.Scene.Clock do
       context.viewport,
       {
         AlarmClock.Scene.Menu,
-        state |> Map.put(:alarm_day, previous_alarm_day(alarm_day))
+        state |> Map.put(:alarm_day, Util.previous_alarm_day(alarm_day))
       }
     )
 
@@ -107,7 +84,7 @@ defmodule AlarmClock.Scene.Clock do
       context.viewport,
       {
         AlarmClock.Scene.Menu,
-        state |> Map.put(:alarm_day, next_alarm_day(alarm_day))
+        state |> Map.put(:alarm_day, Util.next_alarm_day(alarm_day))
       }
     )
 
@@ -149,25 +126,18 @@ defmodule AlarmClock.Scene.Clock do
   end
 
   # --------------------------------------------------------
-  defp format_date({{_, m, d}, _}) do
-    "#{format_month(m)} #{d}"
+  defp format_date({{_, month, day}, _}) do
+    "#{Util.month_name(month)} #{day}"
   end
 
   # --------------------------------------------------------
-  defp format_day({{y, m, d}, _}) do
-    {:ok, date} = Date.new(y, m, d)
-    Enum.at(@days, Date.day_of_week(date) - 1)
+  def format_day({{year, month, day}, _}) do
+    {:ok, date} = Date.new(year, month, day)
+    Util.day_name(Date.day_of_week(date))
   end
 
   # --------------------------------------------------------
-  defp format_time({_, {h, m, _}}) do
-    "#{h}:#{format_minutes(m)}"
+  defp format_time({_, {hour, minute, _}}) do
+    "#{Util.pad_part(hour)}:#{Util.pad_part(minute)}"
   end
-
-  # --------------------------------------------------------
-  defp format_minutes(m) when m >= 0 and m < 10, do: "0#{m}"
-  defp format_minutes(m), do: to_string(m)
-
-  # --------------------------------------------------------
-  defp format_month(m), do: Enum.at(@months, m - 1)
 end
