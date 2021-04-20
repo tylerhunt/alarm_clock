@@ -3,8 +3,8 @@ use Mix.Config
 config :alarm_clock, :viewport, %{
   name: :main_viewport,
   # default_scene: {AlarmClock.Scene.Crosshair, nil},
-  default_scene: {AlarmClock.Scene.SysInfo, nil},
-  size: {800, 480},
+  default_scene: {AlarmClock.Scene.Clock, nil},
+  size: {128, 64},
   opts: [scale: 1.0],
   drivers: [
     %{
