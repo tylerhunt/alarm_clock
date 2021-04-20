@@ -29,9 +29,13 @@ defmodule AlarmClock.Scene.Clock do
          |> text(
            "",
            id: :day,
-           text_align: :center_middle,
+           text_align: :left_middle,
            text_height: 16,
-           translate: {@width / 2, @height - 8}
+           translate: {0, @height - 8}
+         )
+         |> AlarmClock.Component.Alarm.add_to_graph(
+           {__MODULE__, "06:00"},
+           translate: {@width - 48, @height - 12}
          )
 
   # ============================================================================
