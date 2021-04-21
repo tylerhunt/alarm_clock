@@ -6,7 +6,7 @@ defmodule AlarmClock.Scene.SetAlarms do
   alias Scenic.Primitive
   import Scenic.Primitives
 
-  alias AlarmClock.Util
+  alias AlarmClock.{Backend,Util}
 
   @width 128
   @height 64
@@ -21,15 +21,14 @@ defmodule AlarmClock.Scene.SetAlarms do
   # setup
 
   # --------------------------------------------------------
-  def init(_state, _opts) do
-    alarm_day = Date.utc_today |> Date.day_of_week()
-
+  def init(%{day: day, alarm: {enabled, time}}, _opts) do
     %{editing: editing, enabled: enabled} = state = %{
-      alarm_day: alarm_day,
+      day: day,
       editing: false,
-      enabled: true,
+      enabled: enabled == :on,
       graph: nil,
-      part: @default_part
+      part: @default_part,
+      time: time,
     }
 
     graph =
@@ -37,7 +36,7 @@ defmodule AlarmClock.Scene.SetAlarms do
       |> title(enabled, editing)
       |> time()
       |> part()
-      |> day_of_week(alarm_day)
+      |> day_of_week(day)
 
     {:ok, %{state | graph: graph}, push: graph}
   end
@@ -85,11 +84,11 @@ defmodule AlarmClock.Scene.SetAlarms do
   def handle_input(
     {:key, {"left", :press, 0}},
     _context,
-    %{alarm_day: alarm_day, editing: false, graph: graph} = state
+    %{day: day, editing: false, graph: graph} = state
   ) do
-    alarm_day = Util.previous_alarm_day(alarm_day)
-    graph = Graph.modify(graph, :day, &text(&1, Util.day_name(alarm_day)))
-    {:halt, %{state | alarm_day: alarm_day, graph: graph}, push: graph}
+    day = Util.previous_alarm_day(day)
+    graph = Graph.modify(graph, :day, &text(&1, Util.day_name(day)))
+    {:halt, %{state | day: day, graph: graph}, push: graph}
   end
   def handle_input(
     {:key, {"left", :press, 0}},
@@ -104,11 +103,11 @@ defmodule AlarmClock.Scene.SetAlarms do
   def handle_input(
     {:key, {"right", :press, 0}},
     _context,
-    %{alarm_day: alarm_day, editing: false, graph: graph} = state
+    %{day: day, editing: false, graph: graph} = state
   ) do
-    alarm_day = Util.next_alarm_day(alarm_day)
-    graph = Graph.modify(graph, :day, &text(&1, Util.day_name(alarm_day)))
-    {:halt, %{state | alarm_day: alarm_day, graph: graph}, push: graph}
+    day = Util.next_alarm_day(day)
+    graph = Graph.modify(graph, :day, &text(&1, Util.day_name(day)))
+    {:halt, %{state | day: day, graph: graph}, push: graph}
   end
   def handle_input(
     {:key, {"right", :press, 0}},
@@ -123,9 +122,10 @@ defmodule AlarmClock.Scene.SetAlarms do
   def handle_input(
     {:key, {"up", :press, 0}},
     _context,
-    %{editing: false, enabled: enabled} = state
+    %{day: day, editing: false, enabled: enabled} = state
   ) do
     {state, graph} = set_alarm(%{state | enabled: !enabled})
+    Backend.set_alarm(day, alarm_tuple(state))
     {:noreply, state, push: graph}
   end
   def handle_input(
@@ -133,18 +133,20 @@ defmodule AlarmClock.Scene.SetAlarms do
     _context,
     %{editing: true, graph: graph, part: part} = state
   ) do
-    time = Graph.get!(graph, :time).data
-    graph = Graph.modify(graph, :time, &text(&1, change_part(time, part, 1)))
-    {:noreply, %{state | graph: graph}, push: graph}
+    time = graph |> Graph.get!(:time) |> Primitive.get()
+    new_time = change_part(time, part, 1)
+    graph = Graph.modify(graph, :time, &text(&1, new_time))
+    {:noreply, %{state | graph: graph, time: new_time}, push: graph}
   end
 
   # --------------------------------------------------------
   def handle_input(
     {:key, {"down", :press, 0}},
     _context,
-    %{editing: false, enabled: enabled} = state
+    %{day: day, editing: false, enabled: enabled} = state
   ) do
     {state, graph} = set_alarm(%{state | enabled: !enabled})
+    Backend.set_alarm(day, alarm_tuple(state))
     {:noreply, state, push: graph}
   end
   def handle_input(
@@ -152,9 +154,10 @@ defmodule AlarmClock.Scene.SetAlarms do
     _context,
     %{editing: true, graph: graph, part: part} = state
   ) do
-    time = Graph.get!(graph, :time).data
-    graph = Graph.modify(graph, :time, &text(&1, change_part(time, part, -1)))
-    {:noreply, %{state | graph: graph}, push: graph}
+    time = graph |> Graph.get!(:time) |> Primitive.get()
+    new_time = change_part(time, part, -1)
+    graph = Graph.modify(graph, :time, &text(&1, new_time))
+    {:noreply, %{state | graph: graph, time: new_time}, push: graph}
   end
 
   # --------------------------------------------------------
@@ -231,23 +234,35 @@ defmodule AlarmClock.Scene.SetAlarms do
   # --------------------------------------------------------
   defp start_editing(%{enabled: enabled, graph: graph} = state) do
     editing = true
+    {part, graph} = show_part(@default_part, graph) # reset part to default
+
     graph =
       graph
       |> Graph.modify(:title, &text(&1, title_text(enabled, editing)))
       |> Graph.modify(:part, &update_opts(&1, hidden: false))
-    {%{state | editing: editing, graph: graph}, graph}
+
+    {%{state | editing: editing, graph: graph, part: part}, graph}
   end
 
   # --------------------------------------------------------
-  defp end_editing(%{enabled: enabled, graph: graph} = state) do
+  defp end_editing(
+    %{day: day, enabled: enabled, graph: graph} = state
+  ) do
     editing = false
+
     graph =
       graph
       |> Graph.modify(:title, &text(&1, title_text(enabled, editing)))
       |> Graph.modify(:part, &update_opts(&1, hidden: true))
-    {part, graph} = show_part(@default_part, graph)
-    {%{state | editing: editing, graph: graph, part: part}, graph}
+
+    Backend.set_alarm(day, alarm_tuple(state))
+
+    {%{state | editing: editing, graph: graph}, graph}
   end
+
+  # --------------------------------------------------------
+  defp alarm_tuple(%{enabled: true, time: time}), do: {:on, time}
+  defp alarm_tuple(%{enabled: false, time: time}), do: {:off, time}
 
   # --------------------------------------------------------
   defp swap_part(part, graph) do

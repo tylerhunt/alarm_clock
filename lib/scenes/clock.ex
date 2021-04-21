@@ -3,27 +3,35 @@ defmodule AlarmClock.Scene.Clock do
 
   alias Scenic.ViewPort
   alias Scenic.Graph
+  alias Scenic.Primitive
   import Scenic.Primitives
 
-  alias AlarmClock.Util
+  alias AlarmClock.{Backend,Util}
 
   @width 128
   @height 64
-
 
   # ============================================================================
   # setup
 
   # --------------------------------------------------------
   def init(_state, _opts) do
+    {:ok, alarms} = Backend.get_alarms()
+    day = Date.utc_today |> Date.day_of_week()
+
+    state = %{alarms: alarms, day: day, graph: nil}
+    alarm = alarms |> Map.get(day)
+
     graph =
       Graph.build(font: :roboto_mono, font_size: 16)
       |> date()
       |> day_of_week()
       |> time()
-      |> alarm()
+      |> alarm(alarm)
 
-    {:ok, %{alarms: @alarms, graph: graph}, push: graph}
+    :ok = Backend.subscribe()
+
+    {:ok, %{state | graph: graph}, push: graph}
   end
 
   # --------------------------------------------------------
@@ -33,11 +41,30 @@ defmodule AlarmClock.Scene.Clock do
   end
 
   # ============================================================================
+  # callbacks
+
+  def handle_info({:refresh, alarms}, %{day: day, graph: graph} = state) do
+    alarm = alarms |> Map.get(day)
+    graph = update_alarm(graph, alarm)
+    {:noreply, %{state | alarms: alarms, graph: graph}, push: graph}
+  end
+
+  # ============================================================================
   # event handlers
 
   # --------------------------------------------------------
-  def handle_input({:key, {"enter", :press, 0}}, context, state) do
-    ViewPort.set_root(context.viewport, {AlarmClock.Scene.SetAlarms, nil})
+  def handle_input(
+    {:key, {"enter", :press, 0}},
+    context,
+    %{alarms: alarms, day: day} = state
+  ) do
+    alarm = alarms |> Map.get(day)
+
+    ViewPort.set_root(
+      context.viewport,
+      {AlarmClock.Scene.SetAlarms, %{alarm: alarm, day: day}}
+    )
+
     {:halt, state}
   end
 
@@ -50,11 +77,12 @@ defmodule AlarmClock.Scene.Clock do
   # UI elements
 
   # --------------------------------------------------------
-  defp alarm(graph) do
+  defp alarm(graph, {enabled, time} = _alarm) do
     AlarmClock.Component.Alarm.add_to_graph(
       graph,
-      {__MODULE__, "06:00"},
+      {__MODULE__, time},
       id: :alarm,
+      hidden: enabled == :off,
       translate: {@width - 48, @height - 12}
     )
   end
@@ -94,6 +122,17 @@ defmodule AlarmClock.Scene.Clock do
 
   # ============================================================================
   # helpers
+
+  # --------------------------------------------------------
+  defp update_alarm(graph, {:on, time}) do
+    graph
+    |> Graph.modify(:alarm, &Primitive.put(&1, {__MODULE__, time}, []))
+    |> Graph.modify(:alarm, &update_opts(&1, hidden: false))
+  end
+  defp update_alarm(graph, {:off, _}) do
+    graph
+    |> Graph.modify(:alarm, &update_opts(&1, hidden: true))
+  end
 
   # --------------------------------------------------------
   defp update_date(graph, time) do
