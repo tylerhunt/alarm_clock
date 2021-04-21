@@ -25,7 +25,7 @@ defmodule AlarmClock.Scene.Clock do
            text_height: 16,
            translate: {0, @height - 8}
          )
-         |> AlarmClock.Component.Clock.add_to_graph(
+         |> AlarmClock.Component.Time.add_to_graph(
            __MODULE__,
            translate: {@width / 2, (@height / 2) - 1}
          )

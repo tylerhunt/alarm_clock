@@ -1,4 +1,4 @@
-defmodule AlarmClock.Component.Clock do
+defmodule AlarmClock.Component.Time do
   use Scenic.Component
 
   alias Scenic.Graph
