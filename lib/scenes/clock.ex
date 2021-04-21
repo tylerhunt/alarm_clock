@@ -39,19 +39,11 @@ defmodule AlarmClock.Scene.Clock do
 
   # --------------------------------------------------------
   def init(_state, _opts) do
-    now = DateTime.utc_now
-
-    %{graph: graph} = state = %{
-      alarm_day: Date.day_of_week(now),
-      graph: @graph,
-    }
-
-    {:ok, state, push: graph}
+    {:ok, %{graph: @graph}, push: @graph}
   end
 
   # --------------------------------------------------------
   def filter_event({:tick, time}, _from, %{graph: graph} = state) do
-    IO.inspect {:tick, time}
     graph = update_date(graph, time)
     {:noreply, %{state | graph: graph}, push: graph}
   end
@@ -60,36 +52,8 @@ defmodule AlarmClock.Scene.Clock do
   # event handlers
 
   # --------------------------------------------------------
-  def handle_input(
-    {:key, {"left", :press, 0}},
-    context,
-    %{alarm_day: alarm_day} = state
-  ) do
-    ViewPort.set_root(
-      context.viewport,
-      {
-        AlarmClock.Scene.Menu,
-        state |> Map.put(:alarm_day, Util.previous_alarm_day(alarm_day))
-      }
-    )
-
-    {:halt, state}
-  end
-
-  # --------------------------------------------------------
-  def handle_input(
-    {:key, {"right", :press, 0}},
-    context,
-    %{alarm_day: alarm_day} = state
-  ) do
-    ViewPort.set_root(
-      context.viewport,
-      {
-        AlarmClock.Scene.Menu,
-        state |> Map.put(:alarm_day, Util.next_alarm_day(alarm_day))
-      }
-    )
-
+  def handle_input({:key, {"enter", :press, 0}}, context, state) do
+    ViewPort.set_root(context.viewport, {AlarmClock.Scene.Menu, nil})
     {:halt, state}
   end
 

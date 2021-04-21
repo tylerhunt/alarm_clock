@@ -19,8 +19,8 @@ defmodule AlarmClock.Scene.Menu do
 
   @graph Graph.build(font: :roboto_mono, font_size: 12)
          |> text(
-           "SET ALARM",
-           id: :date,
+           "",
+           id: :title,
            font_size: 16,
            text_align: :center_middle,
            text_height: 16,
@@ -37,6 +37,7 @@ defmodule AlarmClock.Scene.Menu do
          |> rrect(
            {44, 33, 5},
            id: :part,
+           hidden: true,
            stroke: {1, :white},
            translate: @parts |> Map.get(@default_part)
          )
@@ -53,71 +54,99 @@ defmodule AlarmClock.Scene.Menu do
   # setup
 
   # --------------------------------------------------------
-  def init(%{alarm_day: alarm_day}, _opts) do
-    %{graph: graph} = state = %{
+  def init(_state, _opts) do
+    alarm_day = Date.utc_today |> Date.day_of_week()
+
+    %{editing: editing, enabled: enabled} = state = %{
       alarm_day: alarm_day,
-      part: @default_part,
-      graph: @graph |> Graph.modify(:day, &text(&1, Util.day_name(alarm_day)))
+      editing: false,
+      enabled: true,
+      graph: nil,
+      part: @default_part
     }
 
-    {:ok, state, push: graph}
+    graph =
+      @graph
+      |> Graph.modify(:day, &text(&1, Util.day_name(alarm_day)))
+      |> Graph.modify(:title, &text(&1, title(enabled, editing)))
+
+    {:ok, %{state | graph: graph}, push: graph}
   end
 
   # ============================================================================
   # event handlers
 
   # --------------------------------------------------------
-  def handle_input({:key, {"enter", :press, 0}}, context, state) do
+  def handle_input(
+    {:key, {"enter", :press, 0}},
+    _context,
+    %{editing: false} = state
+  ) do
+    {state, graph} = start_editing(state)
+    {:noreply, state, push: graph}
+  end
+  def handle_input(
+    {:key, {"enter", :press, 0}},
+    _context,
+    %{editing: true} = state
+  ) do
+    {state, graph} = end_editing(state)
+    {:noreply, state, push: graph}
+  end
+
+  # --------------------------------------------------------
+  def handle_input(
+    {:key, {"escape", :press, 0}},
+    context,
+    %{editing: false} = state
+  ) do
     ViewPort.reset(context.viewport)
     {:halt, state}
+  end
+  def handle_input(
+    {:key, {"escape", :press, 0}},
+    _context,
+    %{editing: true} = state
+  ) do
+    {state, graph} = end_editing(state)
+    {:noreply, state, push: graph}
   end
 
   # --------------------------------------------------------
   def handle_input(
     {:key, {"left", :press, 0}},
-    context,
-    %{alarm_day: alarm_day} = state
+    _context,
+    %{alarm_day: alarm_day, editing: false, graph: graph} = state
   ) do
-    ViewPort.set_root(
-      context.viewport,
-      {
-        AlarmClock.Scene.Menu,
-        state |> Map.put(:alarm_day, Util.previous_alarm_day(alarm_day))
-      }
-    )
-    {:halt, state}
+    alarm_day = Util.previous_alarm_day(alarm_day)
+    graph = Graph.modify(graph, :day, &text(&1, Util.day_name(alarm_day)))
+    {:halt, %{state | alarm_day: alarm_day, graph: graph}, push: graph}
+  end
+  def handle_input(
+    {:key, {"left", :press, 0}},
+    _context,
+    %{graph: graph, part: part} = state
+  ) do
+    {part, graph} = swap_part(part, graph)
+    {:noreply, %{state | graph: graph, part: part}, push: graph}
   end
 
   # --------------------------------------------------------
-  #def handle_input(
-  #  {:key, {"right", :press, 0}},
-  #  context,
-  #  %{alarm_day: alarm_day} = state
-  #) do
-  #  ViewPort.set_root(
-  #    context.viewport,
-  #    {
-  #      AlarmClock.Scene.Menu,
-  #      state |> Map.put(:alarm_day, Util.next_alarm_day(alarm_day))
-  #    }
-  #  )
-  #  {:halt, state}
-  #end
+  def handle_input(
+    {:key, {"right", :press, 0}},
+    _context,
+    %{alarm_day: alarm_day, editing: false, graph: graph} = state
+  ) do
+    alarm_day = Util.next_alarm_day(alarm_day)
+    graph = Graph.modify(graph, :day, &text(&1, Util.day_name(alarm_day)))
+    {:halt, %{state | alarm_day: alarm_day, graph: graph}, push: graph}
+  end
   def handle_input(
     {:key, {"right", :press, 0}},
     _context,
     %{graph: graph, part: part} = state
   ) do
-    part = (part == :hour && :minute || :hour)
-    translation = @parts |> Map.get(part)
-
-    graph =
-      Graph.modify(
-        graph,
-        :part,
-        &Primitive.put_transform(&1, :translate, translation)
-      )
-
+    {part, graph} = swap_part(part, graph)
     {:noreply, %{state | graph: graph, part: part}, push: graph}
   end
 
@@ -125,7 +154,15 @@ defmodule AlarmClock.Scene.Menu do
   def handle_input(
     {:key, {"up", :press, 0}},
     _context,
-    %{graph: graph, part: part} = state
+    %{editing: false, enabled: enabled} = state
+  ) do
+    {state, graph} = set_alarm(%{state | enabled: !enabled})
+    {:noreply, state, push: graph}
+  end
+  def handle_input(
+    {:key, {"up", :press, 0}},
+    _context,
+    %{editing: true, graph: graph, part: part} = state
   ) do
     time = Graph.get!(graph, :time).data
     graph = Graph.modify(graph, :time, &text(&1, change_part(time, part, 1)))
@@ -136,19 +173,74 @@ defmodule AlarmClock.Scene.Menu do
   def handle_input(
     {:key, {"down", :press, 0}},
     _context,
-    %{graph: graph, part: part} = state
+    %{editing: false, enabled: enabled} = state
+  ) do
+    {state, graph} = set_alarm(%{state | enabled: !enabled})
+    {:noreply, state, push: graph}
+  end
+  def handle_input(
+    {:key, {"down", :press, 0}},
+    _context,
+    %{editing: true, graph: graph, part: part} = state
   ) do
     time = Graph.get!(graph, :time).data
     graph = Graph.modify(graph, :time, &text(&1, change_part(time, part, -1)))
     {:noreply, %{state | graph: graph}, push: graph}
   end
 
+  # --------------------------------------------------------
+  def handle_input(_msg, _, graph) do
+    {:noreply, graph}
+  end
+
   # ============================================================================
   # helpers
 
   # --------------------------------------------------------
-  def handle_input(_msg, _, graph) do
-    {:noreply, graph}
+  defp set_alarm(%{editing: editing, enabled: enabled, graph: graph} = state) do
+    graph = Graph.modify(graph, :title, &text(&1, title(enabled, editing)))
+    {%{state | enabled: enabled, graph: graph}, graph}
+  end
+
+  # --------------------------------------------------------
+  defp start_editing(%{enabled: enabled, graph: graph} = state) do
+    editing = true
+    graph =
+      graph
+      |> Graph.modify(:title, &text(&1, title(enabled, editing)))
+      |> Graph.modify(:part, &update_opts(&1, hidden: false))
+    {%{state | editing: editing, graph: graph}, graph}
+  end
+
+  # --------------------------------------------------------
+  defp end_editing(%{enabled: enabled, graph: graph} = state) do
+    editing = false
+    graph =
+      graph
+      |> Graph.modify(:title, &text(&1, title(enabled, editing)))
+      |> Graph.modify(:part, &update_opts(&1, hidden: true))
+    {part, graph} = show_part(@default_part, graph)
+    {%{state | editing: editing, graph: graph, part: part}, graph}
+  end
+
+  # --------------------------------------------------------
+  defp swap_part(part, graph) do
+    part = (part == :hour && :minute || :hour)
+    show_part(part, graph)
+  end
+
+  # --------------------------------------------------------
+  defp show_part(part, graph) do
+    translation = @parts |> Map.get(part)
+
+    graph =
+      Graph.modify(
+        graph,
+        :part,
+        &Primitive.put_transform(&1, :translate, translation)
+      )
+
+    {part, graph}
   end
 
   # --------------------------------------------------------
@@ -162,4 +254,9 @@ defmodule AlarmClock.Scene.Menu do
     |> Enum.map(&String.pad_leading(to_string(&1), 2, "0"))
     |> Enum.join(":")
   end
+
+  # --------------------------------------------------------
+  defp title(_, true), do: "ALARM: SET"
+  defp title(false, false), do: "ALARM: OFF"
+  defp title(true, false), do: "ALARM: ON "
 end
