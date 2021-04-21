@@ -51,11 +51,10 @@ defmodule AlarmClock.Component.Alarm do
       )
       |> text(
         alarm,
-        id: :alarm,
         fill: @color,
         text_align: :left_bottom,
         text_height: 16,
-        translate: {@width, @height}
+        translate: {@width + 2, @height}
       )
 
     {:ok, %{alarm: alarm, graph: graph}, push: graph}

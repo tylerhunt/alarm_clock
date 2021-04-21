@@ -83,7 +83,7 @@ defmodule AlarmClock.Scene.Clock do
       {__MODULE__, time},
       id: :alarm,
       hidden: enabled == :off,
-      translate: {@width - 48, @height - 12}
+      translate: {@width - 50, @height - 12}
     )
   end
 
