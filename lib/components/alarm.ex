@@ -9,7 +9,6 @@ defmodule AlarmClock.Component.Alarm do
 
   @diameter @width / 2
   @radius @diameter / 2
-  @pi 3.14159
 
   @color :white
 
@@ -46,7 +45,7 @@ defmodule AlarmClock.Component.Alarm do
         fill: @color
       )
       |> sector(
-        {@radius / 2, 0, @pi},
+        {@radius / 2, 0, :math.pi},
         fill: @color,
         translate: {@width / 2, @diameter + @radius + (@radius / 8)}
       )
