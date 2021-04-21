@@ -3,13 +3,20 @@ defmodule AlarmClock.Backend do
 
   defmodule State do
     @alarms %{
-      1 => {:off, "06:00"}, # Monday
-      2 => {:off, "06:00"}, # Tuesday
-      3 => {:off, "06:00"}, # Wednesday
-      4 => {:off, "06:00"}, # Thursday
-      5 => {:off, "06:00"}, # Friday
-      6 => {:off, "06:00"}, # Saturday
-      7 => {:off, "06:00"}, # Sunday
+      # Monday
+      1 => {:off, "06:00"},
+      # Tuesday
+      2 => {:off, "06:00"},
+      # Wednesday
+      3 => {:off, "06:00"},
+      # Thursday
+      4 => {:off, "06:00"},
+      # Friday
+      5 => {:off, "06:00"},
+      # Saturday
+      6 => {:off, "06:00"},
+      # Sunday
+      7 => {:off, "06:00"}
     }
 
     defstruct alarms: @alarms, subscribers: []
@@ -34,7 +41,6 @@ defmodule AlarmClock.Backend do
     GenServer.call(__MODULE__, {:set_alarm, day, alarm})
   end
 
-
   # Server API
 
   def init(:ok) do
@@ -50,10 +56,11 @@ defmodule AlarmClock.Backend do
   end
 
   def handle_call(
-    {:set_alarm, day, {enabled, time} = alarm},
-    _from,
-    %{alarms: alarms} = state
-  ) when day in 1..7 and enabled in [:on, :off] and is_bitstring(time) do
+        {:set_alarm, day, {enabled, time} = alarm},
+        _from,
+        %{alarms: alarms} = state
+      )
+      when day in 1..7 and enabled in [:on, :off] and is_bitstring(time) do
     alarms = alarms |> Map.put(day, alarm)
     new_state = %{state | alarms: alarms}
 
@@ -61,7 +68,6 @@ defmodule AlarmClock.Backend do
 
     {:reply, :ok, new_state}
   end
-
 
   # Helpers
 

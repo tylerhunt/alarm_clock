@@ -7,8 +7,9 @@ defmodule AlarmClock.Scene.Supervisor do
 
   def init(:ok) do
     children = [
-      {AlarmClock.Scene.Clock, {nil, [name: :clock]}},
+      {AlarmClock.Scene.Clock, {nil, [name: :clock]}}
     ]
+
     Supervisor.init(children, strategy: :one_for_one)
   end
 end

@@ -6,14 +6,14 @@ defmodule AlarmClock.Scene.SetAlarms do
   alias Scenic.Primitive
   import Scenic.Primitives
 
-  alias AlarmClock.{Backend,Util}
+  alias AlarmClock.{Backend, Util}
 
   @width 128
   @height 64
 
   @parts %{
-    hour: {9, (@height / 2) - 16},
-    minute: {75, (@height / 2) - 16},
+    hour: {9, @height / 2 - 16},
+    minute: {75, @height / 2 - 16}
   }
   @default_part :hour
 
@@ -22,14 +22,15 @@ defmodule AlarmClock.Scene.SetAlarms do
 
   # --------------------------------------------------------
   def init(%{day: day, alarm: {enabled, time}}, _opts) do
-    %{editing: editing, enabled: enabled} = state = %{
-      day: day,
-      editing: false,
-      enabled: enabled == :on,
-      graph: nil,
-      part: @default_part,
-      time: time,
-    }
+    %{editing: editing, enabled: enabled} =
+      state = %{
+        day: day,
+        editing: false,
+        enabled: enabled == :on,
+        graph: nil,
+        part: @default_part,
+        time: time
+      }
 
     graph =
       Graph.build(font: :roboto_mono, font_size: 12)
@@ -46,93 +47,98 @@ defmodule AlarmClock.Scene.SetAlarms do
 
   # --------------------------------------------------------
   def handle_input(
-    {:key, {"enter", :press, 0}},
-    _context,
-    %{editing: false} = state
-  ) do
+        {:key, {"enter", :press, 0}},
+        _context,
+        %{editing: false} = state
+      ) do
     {state, graph} = start_editing(state)
     {:noreply, state, push: graph}
   end
+
   def handle_input(
-    {:key, {"enter", :press, 0}},
-    _context,
-    %{editing: true} = state
-  ) do
+        {:key, {"enter", :press, 0}},
+        _context,
+        %{editing: true} = state
+      ) do
     {state, graph} = end_editing(state)
     {:noreply, state, push: graph}
   end
 
   # --------------------------------------------------------
   def handle_input(
-    {:key, {"escape", :press, 0}},
-    context,
-    %{editing: false} = state
-  ) do
+        {:key, {"escape", :press, 0}},
+        context,
+        %{editing: false} = state
+      ) do
     ViewPort.reset(context.viewport)
     {:halt, state}
   end
+
   def handle_input(
-    {:key, {"escape", :press, 0}},
-    _context,
-    %{editing: true} = state
-  ) do
+        {:key, {"escape", :press, 0}},
+        _context,
+        %{editing: true} = state
+      ) do
     {state, graph} = end_editing(state)
     {:noreply, state, push: graph}
   end
 
   # --------------------------------------------------------
   def handle_input(
-    {:key, {"left", :press, 0}},
-    _context,
-    %{day: day, editing: false, graph: graph} = state
-  ) do
+        {:key, {"left", :press, 0}},
+        _context,
+        %{day: day, editing: false, graph: graph} = state
+      ) do
     day = Util.previous_alarm_day(day)
     graph = Graph.modify(graph, :day, &text(&1, Util.day_name(day)))
     {:halt, %{state | day: day, graph: graph}, push: graph}
   end
+
   def handle_input(
-    {:key, {"left", :press, 0}},
-    _context,
-    %{graph: graph, part: part} = state
-  ) do
+        {:key, {"left", :press, 0}},
+        _context,
+        %{graph: graph, part: part} = state
+      ) do
     {part, graph} = swap_part(part, graph)
     {:noreply, %{state | graph: graph, part: part}, push: graph}
   end
 
   # --------------------------------------------------------
   def handle_input(
-    {:key, {"right", :press, 0}},
-    _context,
-    %{day: day, editing: false, graph: graph} = state
-  ) do
+        {:key, {"right", :press, 0}},
+        _context,
+        %{day: day, editing: false, graph: graph} = state
+      ) do
     day = Util.next_alarm_day(day)
     graph = Graph.modify(graph, :day, &text(&1, Util.day_name(day)))
     {:halt, %{state | day: day, graph: graph}, push: graph}
   end
+
   def handle_input(
-    {:key, {"right", :press, 0}},
-    _context,
-    %{graph: graph, part: part} = state
-  ) do
+        {:key, {"right", :press, 0}},
+        _context,
+        %{graph: graph, part: part} = state
+      ) do
     {part, graph} = swap_part(part, graph)
     {:noreply, %{state | graph: graph, part: part}, push: graph}
   end
 
   # --------------------------------------------------------
   def handle_input(
-    {:key, {"up", :press, 0}},
-    _context,
-    %{day: day, editing: false, enabled: enabled} = state
-  ) do
+        {:key, {"up", :press, 0}},
+        _context,
+        %{day: day, editing: false, enabled: enabled} = state
+      ) do
     {state, graph} = set_alarm(%{state | enabled: !enabled})
     Backend.set_alarm(day, alarm_tuple(state))
     {:noreply, state, push: graph}
   end
+
   def handle_input(
-    {:key, {"up", :press, 0}},
-    _context,
-    %{editing: true, graph: graph, part: part} = state
-  ) do
+        {:key, {"up", :press, 0}},
+        _context,
+        %{editing: true, graph: graph, part: part} = state
+      ) do
     time = graph |> Graph.get!(:time) |> Primitive.get()
     new_time = change_part(time, part, 1)
     graph = Graph.modify(graph, :time, &text(&1, new_time))
@@ -141,19 +147,20 @@ defmodule AlarmClock.Scene.SetAlarms do
 
   # --------------------------------------------------------
   def handle_input(
-    {:key, {"down", :press, 0}},
-    _context,
-    %{day: day, editing: false, enabled: enabled} = state
-  ) do
+        {:key, {"down", :press, 0}},
+        _context,
+        %{day: day, editing: false, enabled: enabled} = state
+      ) do
     {state, graph} = set_alarm(%{state | enabled: !enabled})
     Backend.set_alarm(day, alarm_tuple(state))
     {:noreply, state, push: graph}
   end
+
   def handle_input(
-    {:key, {"down", :press, 0}},
-    _context,
-    %{editing: true, graph: graph, part: part} = state
-  ) do
+        {:key, {"down", :press, 0}},
+        _context,
+        %{editing: true, graph: graph, part: part} = state
+      ) do
     time = graph |> Graph.get!(:time) |> Primitive.get()
     new_time = change_part(time, part, -1)
     graph = Graph.modify(graph, :time, &text(&1, new_time))
@@ -190,7 +197,7 @@ defmodule AlarmClock.Scene.SetAlarms do
       font_size: 48,
       text_align: :center_middle,
       text_height: @height,
-      translate: {@width / 2, (@height / 2) - 1}
+      translate: {@width / 2, @height / 2 - 1}
     )
   end
 
@@ -234,7 +241,8 @@ defmodule AlarmClock.Scene.SetAlarms do
   # --------------------------------------------------------
   defp start_editing(%{enabled: enabled, graph: graph} = state) do
     editing = true
-    {part, graph} = show_part(@default_part, graph) # reset part to default
+    # reset part to default
+    {part, graph} = show_part(@default_part, graph)
 
     graph =
       graph
@@ -245,9 +253,7 @@ defmodule AlarmClock.Scene.SetAlarms do
   end
 
   # --------------------------------------------------------
-  defp end_editing(
-    %{day: day, enabled: enabled, graph: graph} = state
-  ) do
+  defp end_editing(%{day: day, enabled: enabled, graph: graph} = state) do
     editing = false
 
     graph =
@@ -266,7 +272,7 @@ defmodule AlarmClock.Scene.SetAlarms do
 
   # --------------------------------------------------------
   defp swap_part(part, graph) do
-    part = (part == :hour && :minute || :hour)
+    part = (part == :hour && :minute) || :hour
     show_part(part, graph)
   end
 

@@ -34,7 +34,7 @@ defmodule AlarmClock.Component.Alarm do
       |> rect(
         {@diameter, @diameter},
         fill: @color,
-        translate: {(@width / 2) - @radius, @radius}
+        translate: {@width / 2 - @radius, @radius}
       )
       |> triangle(
         {
@@ -45,9 +45,9 @@ defmodule AlarmClock.Component.Alarm do
         fill: @color
       )
       |> sector(
-        {@radius / 2, 0, :math.pi},
+        {@radius / 2, 0, :math.pi()},
         fill: @color,
-        translate: {@width / 2, @diameter + @radius + (@radius / 8)}
+        translate: {@width / 2, @diameter + @radius + @radius / 8}
       )
       |> text(
         alarm,

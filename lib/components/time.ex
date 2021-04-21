@@ -27,12 +27,13 @@ defmodule AlarmClock.Component.Time do
 
   # --------------------------------------------------------
   def init(_state, _opts) do
-    now = DateTime.utc_now
+    now = DateTime.utc_now()
 
-    %{graph: graph} = state = %{
-      graph: update_time(@graph),
-      timer: nil,
-    }
+    %{graph: graph} =
+      state = %{
+        graph: update_time(@graph),
+        timer: nil
+      }
 
     # start clock in the future close to the second boundary
     {microseconds, _} = now.microsecond

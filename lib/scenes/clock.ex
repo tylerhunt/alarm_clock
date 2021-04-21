@@ -6,7 +6,7 @@ defmodule AlarmClock.Scene.Clock do
   alias Scenic.Primitive
   import Scenic.Primitives
 
-  alias AlarmClock.{Backend,Util}
+  alias AlarmClock.{Backend, Util}
 
   @width 128
   @height 64
@@ -17,7 +17,7 @@ defmodule AlarmClock.Scene.Clock do
   # --------------------------------------------------------
   def init(_state, _opts) do
     {:ok, alarms} = Backend.get_alarms()
-    day = Date.utc_today |> Date.day_of_week()
+    day = Date.utc_today() |> Date.day_of_week()
 
     state = %{alarms: alarms, day: day, graph: nil}
     alarm = alarms |> Map.get(day)
@@ -54,10 +54,10 @@ defmodule AlarmClock.Scene.Clock do
 
   # --------------------------------------------------------
   def handle_input(
-    {:key, {"enter", :press, 0}},
-    context,
-    %{alarms: alarms, day: day} = state
-  ) do
+        {:key, {"enter", :press, 0}},
+        context,
+        %{alarms: alarms, day: day} = state
+      ) do
     alarm = alarms |> Map.get(day)
 
     ViewPort.set_root(
@@ -89,14 +89,14 @@ defmodule AlarmClock.Scene.Clock do
 
   # --------------------------------------------------------
   defp date(graph) do
-     text(
-       graph,
-       "",
-       id: :date,
-       text_align: :center_middle,
-       text_height: 16,
-       translate: {@width / 2, 8}
-     )
+    text(
+      graph,
+      "",
+      id: :date,
+      text_align: :center_middle,
+      text_height: 16,
+      translate: {@width / 2, 8}
+    )
   end
 
   # --------------------------------------------------------
@@ -116,7 +116,7 @@ defmodule AlarmClock.Scene.Clock do
     AlarmClock.Component.Time.add_to_graph(
       graph,
       __MODULE__,
-      translate: {@width / 2, (@height / 2) - 1}
+      translate: {@width / 2, @height / 2 - 1}
     )
   end
 
@@ -129,6 +129,7 @@ defmodule AlarmClock.Scene.Clock do
     |> Graph.modify(:alarm, &Primitive.put(&1, {__MODULE__, time}, []))
     |> Graph.modify(:alarm, &update_opts(&1, hidden: false))
   end
+
   defp update_alarm(graph, {:off, _}) do
     graph
     |> Graph.modify(:alarm, &update_opts(&1, hidden: true))
