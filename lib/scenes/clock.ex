@@ -53,7 +53,7 @@ defmodule AlarmClock.Scene.Clock do
 
   # --------------------------------------------------------
   def handle_input({:key, {"enter", :press, 0}}, context, state) do
-    ViewPort.set_root(context.viewport, {AlarmClock.Scene.Menu, nil})
+    ViewPort.set_root(context.viewport, {AlarmClock.Scene.SetAlarms, nil})
     {:halt, state}
   end
 

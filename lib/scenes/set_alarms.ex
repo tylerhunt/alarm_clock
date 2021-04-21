@@ -1,4 +1,4 @@
-defmodule AlarmClock.Scene.Menu do
+defmodule AlarmClock.Scene.SetAlarms do
   use Scenic.Scene
 
   alias Scenic.ViewPort
