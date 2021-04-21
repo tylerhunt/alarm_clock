@@ -17,39 +17,6 @@ defmodule AlarmClock.Scene.SetAlarms do
   }
   @default_part :hour
 
-  @graph Graph.build(font: :roboto_mono, font_size: 12)
-         |> text(
-           "",
-           id: :title,
-           font_size: 16,
-           text_align: :center_middle,
-           text_height: 16,
-           translate: {@width / 2, 8}
-         )
-         |> text(
-           "06:00",
-           id: :time,
-           font_size: 48,
-           text_align: :center_middle,
-           text_height: @height,
-           translate: {@width / 2, (@height / 2) - 1}
-         )
-         |> rrect(
-           {44, 33, 5},
-           id: :part,
-           hidden: true,
-           stroke: {1, :white},
-           translate: @parts |> Map.get(@default_part)
-         )
-         |> text(
-           "",
-           id: :day,
-           font_size: 16,
-           text_align: :center_middle,
-           text_height: 16,
-           translate: {@width / 2, @height - 8}
-         )
-
   # ============================================================================
   # setup
 
@@ -66,9 +33,11 @@ defmodule AlarmClock.Scene.SetAlarms do
     }
 
     graph =
-      @graph
-      |> Graph.modify(:day, &text(&1, Util.day_name(alarm_day)))
-      |> Graph.modify(:title, &text(&1, title(enabled, editing)))
+      Graph.build(font: :roboto_mono, font_size: 12)
+      |> title(enabled, editing)
+      |> time()
+      |> part()
+      |> day_of_week(alarm_day)
 
     {:ok, %{state | graph: graph}, push: graph}
   end
@@ -194,11 +163,68 @@ defmodule AlarmClock.Scene.SetAlarms do
   end
 
   # ============================================================================
+  # UI elements
+
+  # --------------------------------------------------------
+  defp title(graph, enabled, editing) do
+    text(
+      graph,
+      title_text(enabled, editing),
+      id: :title,
+      font_size: 16,
+      text_align: :center_middle,
+      text_height: 16,
+      translate: {@width / 2, 8}
+    )
+  end
+
+  # --------------------------------------------------------
+  defp time(graph) do
+    text(
+      graph,
+      "06:00",
+      id: :time,
+      font_size: 48,
+      text_align: :center_middle,
+      text_height: @height,
+      translate: {@width / 2, (@height / 2) - 1}
+    )
+  end
+
+  # --------------------------------------------------------
+  defp part(graph) do
+    rrect(
+      graph,
+      {44, 33, 5},
+      id: :part,
+      hidden: true,
+      stroke: {1, :white},
+      translate: @parts |> Map.get(@default_part)
+    )
+  end
+
+  # --------------------------------------------------------
+  defp day_of_week(graph, day) do
+    text(
+      graph,
+      Util.day_name(day),
+      id: :day,
+      font_size: 16,
+      text_align: :center_middle,
+      text_height: 16,
+      translate: {@width / 2, @height - 8}
+    )
+  end
+
+  # ============================================================================
   # helpers
 
   # --------------------------------------------------------
   defp set_alarm(%{editing: editing, enabled: enabled, graph: graph} = state) do
-    graph = Graph.modify(graph, :title, &text(&1, title(enabled, editing)))
+    graph =
+      graph
+      |> Graph.modify(:title, &text(&1, title_text(enabled, editing)))
+
     {%{state | enabled: enabled, graph: graph}, graph}
   end
 
@@ -207,7 +233,7 @@ defmodule AlarmClock.Scene.SetAlarms do
     editing = true
     graph =
       graph
-      |> Graph.modify(:title, &text(&1, title(enabled, editing)))
+      |> Graph.modify(:title, &text(&1, title_text(enabled, editing)))
       |> Graph.modify(:part, &update_opts(&1, hidden: false))
     {%{state | editing: editing, graph: graph}, graph}
   end
@@ -217,7 +243,7 @@ defmodule AlarmClock.Scene.SetAlarms do
     editing = false
     graph =
       graph
-      |> Graph.modify(:title, &text(&1, title(enabled, editing)))
+      |> Graph.modify(:title, &text(&1, title_text(enabled, editing)))
       |> Graph.modify(:part, &update_opts(&1, hidden: true))
     {part, graph} = show_part(@default_part, graph)
     {%{state | editing: editing, graph: graph, part: part}, graph}
@@ -256,7 +282,7 @@ defmodule AlarmClock.Scene.SetAlarms do
   end
 
   # --------------------------------------------------------
-  defp title(_, true), do: "ALARM: SET"
-  defp title(false, false), do: "ALARM: OFF"
-  defp title(true, false), do: "ALARM: ON "
+  defp title_text(_, true), do: "ALARM: SET"
+  defp title_text(false, false), do: "ALARM: OFF"
+  defp title_text(true, false), do: "ALARM: ON "
 end

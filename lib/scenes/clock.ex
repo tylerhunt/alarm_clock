@@ -10,36 +10,20 @@ defmodule AlarmClock.Scene.Clock do
   @width 128
   @height 64
 
-  @graph Graph.build(font: :roboto_mono, font_size: 16)
-         |> text(
-           "",
-           id: :date,
-           text_align: :center_middle,
-           text_height: 16,
-           translate: {@width / 2, 8}
-         )
-         |> text(
-           "",
-           id: :day,
-           text_align: :left_middle,
-           text_height: 16,
-           translate: {0, @height - 8}
-         )
-         |> AlarmClock.Component.Time.add_to_graph(
-           __MODULE__,
-           translate: {@width / 2, (@height / 2) - 1}
-         )
-         |> AlarmClock.Component.Alarm.add_to_graph(
-           {__MODULE__, "06:00"},
-           translate: {@width - 48, @height - 12}
-         )
 
   # ============================================================================
   # setup
 
   # --------------------------------------------------------
   def init(_state, _opts) do
-    {:ok, %{graph: @graph}, push: @graph}
+    graph =
+      Graph.build(font: :roboto_mono, font_size: 16)
+      |> date()
+      |> day_of_week()
+      |> time()
+      |> alarm()
+
+    {:ok, %{alarms: @alarms, graph: graph}, push: graph}
   end
 
   # --------------------------------------------------------
@@ -60,6 +44,52 @@ defmodule AlarmClock.Scene.Clock do
   # --------------------------------------------------------
   def handle_input(_msg, _context, graph) do
     {:noreply, graph}
+  end
+
+  # ============================================================================
+  # UI elements
+
+  # --------------------------------------------------------
+  defp alarm(graph) do
+    AlarmClock.Component.Alarm.add_to_graph(
+      graph,
+      {__MODULE__, "06:00"},
+      id: :alarm,
+      translate: {@width - 48, @height - 12}
+    )
+  end
+
+  # --------------------------------------------------------
+  defp date(graph) do
+     text(
+       graph,
+       "",
+       id: :date,
+       text_align: :center_middle,
+       text_height: 16,
+       translate: {@width / 2, 8}
+     )
+  end
+
+  # --------------------------------------------------------
+  def day_of_week(graph) do
+    text(
+      graph,
+      "",
+      id: :day,
+      text_align: :left_middle,
+      text_height: 16,
+      translate: {0, @height - 8}
+    )
+  end
+
+  # --------------------------------------------------------
+  defp time(graph) do
+    AlarmClock.Component.Time.add_to_graph(
+      graph,
+      __MODULE__,
+      translate: {@width / 2, (@height / 2) - 1}
+    )
   end
 
   # ============================================================================
