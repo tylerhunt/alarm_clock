@@ -4,13 +4,15 @@ defmodule AlarmClock.Component.Alarm do
   import Scenic.Primitives
   alias Scenic.Graph
 
-  @height 12
+  alias AlarmClock.Util
+
   @width 12
 
   @diameter @width / 2
   @radius @diameter / 2
 
   @color :white
+  @font_size 13
 
   # ============================================================================
   # callbacks
@@ -23,40 +25,57 @@ defmodule AlarmClock.Component.Alarm do
   # setup
 
   # --------------------------------------------------------
-  def init({_, alarm}, _opts) do
-    graph =
-      Graph.build(font: :roboto_mono, font_size: 16)
-      |> circle(
-        @radius,
-        fill: @color,
-        translate: {@width / 2, @radius}
-      )
-      |> rect(
-        {@diameter, @diameter},
-        fill: @color,
-        translate: {@width / 2 - @radius, @radius}
-      )
-      |> triangle(
-        {
-          {0, @diameter + @radius},
-          {@width, @diameter + @radius},
-          {@width / 2, 0}
-        },
-        fill: @color
-      )
-      |> sector(
-        {@radius / 2, 0, :math.pi()},
-        fill: @color,
-        translate: {@width / 2, @diameter + @radius + @radius / 8}
-      )
-      |> text(
-        alarm,
-        fill: @color,
-        text_align: :left_bottom,
-        text_height: 16,
-        translate: {@width + 2, @height}
-      )
+  def init({_, time}, _opts) do
+    ProFont.load()
 
-    {:ok, %{alarm: alarm, graph: graph}, push: graph}
+    graph =
+      Graph.build(font: ProFont.hash(), font_size: @font_size)
+      |> icon()
+      |> time(time)
+
+    {:ok, %{time: time, graph: graph}, push: graph}
+  end
+
+  # ============================================================================
+  # UI elements
+
+  # --------------------------------------------------------
+  defp icon(graph) do
+    graph
+    |> circle(
+      @radius,
+      fill: @color,
+      translate: {@width / 2, @radius}
+    )
+    |> rect(
+      {@diameter, @diameter},
+      fill: @color,
+      translate: {@width / 2 - @radius, @radius}
+    )
+    |> triangle(
+      {
+        {0, @diameter + @radius},
+        {@width, @diameter + @radius},
+        {@width / 2, 0}
+      },
+      fill: @color
+    )
+    |> sector(
+      {@radius / 2, 0, :math.pi()},
+      fill: @color,
+      translate: {@width / 2, @diameter + @radius + @radius / 8}
+    )
+  end
+
+  # --------------------------------------------------------
+  defp time(graph, time) do
+    text(
+      graph,
+      Util.format_time(time),
+      fill: @color,
+      text_align: :left_top,
+      text_height: 16,
+      translate: {@width + 2, -1}
+    )
   end
 end

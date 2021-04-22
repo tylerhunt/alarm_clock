@@ -11,10 +11,6 @@ defmodule AlarmClock.Scene.SetAlarms do
   @width 128
   @height 64
 
-  @parts %{
-    hour: {9, @height / 2 - 16},
-    minute: {75, @height / 2 - 16}
-  }
   @default_part :hour
 
   # ============================================================================
@@ -22,6 +18,8 @@ defmodule AlarmClock.Scene.SetAlarms do
 
   # --------------------------------------------------------
   def init(%{day: day, alarm: {enabled, time}}, _opts) do
+    ProFont.load()
+
     %{editing: editing, enabled: enabled} =
       state = %{
         day: day,
@@ -33,10 +31,9 @@ defmodule AlarmClock.Scene.SetAlarms do
       }
 
     graph =
-      Graph.build(font: :roboto_mono, font_size: 12)
+      Graph.build(font: ProFont.hash(), font_size: 13)
       |> title(enabled, editing)
-      |> time()
-      |> part()
+      |> time(time)
       |> day_of_week(day)
 
     {:ok, %{state | graph: graph}, push: graph}
@@ -97,9 +94,9 @@ defmodule AlarmClock.Scene.SetAlarms do
   def handle_input(
         {:key, {"left", :press, 0}},
         _context,
-        %{graph: graph, part: part} = state
+        %{graph: graph, part: part, time: time} = state
       ) do
-    {part, graph} = swap_part(part, graph)
+    {graph, part} = swap_part(graph, time, part)
     {:noreply, %{state | graph: graph, part: part}, push: graph}
   end
 
@@ -117,9 +114,9 @@ defmodule AlarmClock.Scene.SetAlarms do
   def handle_input(
         {:key, {"right", :press, 0}},
         _context,
-        %{graph: graph, part: part} = state
+        %{graph: graph, part: part, time: time} = state
       ) do
-    {part, graph} = swap_part(part, graph)
+    {graph, part} = swap_part(graph, time, part)
     {:noreply, %{state | graph: graph, part: part}, push: graph}
   end
 
@@ -137,11 +134,10 @@ defmodule AlarmClock.Scene.SetAlarms do
   def handle_input(
         {:key, {"up", :press, 0}},
         _context,
-        %{editing: true, graph: graph, part: part} = state
+        %{editing: true, graph: graph, part: part, time: time} = state
       ) do
-    time = graph |> Graph.get!(:time) |> Primitive.get()
     new_time = change_part(time, part, 1)
-    graph = Graph.modify(graph, :time, &text(&1, new_time))
+    graph = update_time(graph, new_time, part)
     {:noreply, %{state | graph: graph, time: new_time}, push: graph}
   end
 
@@ -159,11 +155,10 @@ defmodule AlarmClock.Scene.SetAlarms do
   def handle_input(
         {:key, {"down", :press, 0}},
         _context,
-        %{editing: true, graph: graph, part: part} = state
+        %{editing: true, graph: graph, part: part, time: time} = state
       ) do
-    time = graph |> Graph.get!(:time) |> Primitive.get()
     new_time = change_part(time, part, -1)
-    graph = Graph.modify(graph, :time, &text(&1, new_time))
+    graph = update_time(graph, new_time, part)
     {:noreply, %{state | graph: graph, time: new_time}, push: graph}
   end
 
@@ -181,35 +176,19 @@ defmodule AlarmClock.Scene.SetAlarms do
       graph,
       title_text(enabled, editing),
       id: :title,
-      font_size: 16,
-      text_align: :center_middle,
+      text_align: :center_top,
       text_height: 16,
-      translate: {@width / 2, 8}
+      translate: {@width / 2, 0}
     )
   end
 
   # --------------------------------------------------------
-  defp time(graph) do
-    text(
+  defp time(graph, time) do
+    AlarmClock.Component.Time.add_to_graph(
       graph,
-      "06:00",
+      {__MODULE__, time, :hour},
       id: :time,
-      font_size: 48,
-      text_align: :center_middle,
-      text_height: @height,
       translate: {@width / 2, @height / 2 - 1}
-    )
-  end
-
-  # --------------------------------------------------------
-  defp part(graph) do
-    rrect(
-      graph,
-      {44, 33, 5},
-      id: :part,
-      hidden: true,
-      stroke: {1, :white},
-      translate: @parts |> Map.get(@default_part)
     )
   end
 
@@ -219,10 +198,8 @@ defmodule AlarmClock.Scene.SetAlarms do
       graph,
       Util.day_name(day),
       id: :day,
-      font_size: 16,
-      text_align: :center_middle,
-      text_height: 16,
-      translate: {@width / 2, @height - 8}
+      text_align: :center_bottom,
+      translate: {@width / 2, @height}
     )
   end
 
@@ -239,31 +216,33 @@ defmodule AlarmClock.Scene.SetAlarms do
   end
 
   # --------------------------------------------------------
-  defp start_editing(%{enabled: enabled, graph: graph} = state) do
+  defp start_editing(%{enabled: enabled, graph: graph, time: time} = state) do
     editing = true
-    # reset part to default
-    {part, graph} = show_part(@default_part, graph)
+    part = @default_part
 
     graph =
       graph
       |> Graph.modify(:title, &text(&1, title_text(enabled, editing)))
-      |> Graph.modify(:part, &update_opts(&1, hidden: false))
+      |> update_time(time, part)
 
     {%{state | editing: editing, graph: graph, part: part}, graph}
   end
 
   # --------------------------------------------------------
-  defp end_editing(%{day: day, enabled: enabled, graph: graph} = state) do
+  defp end_editing(
+    %{day: day, enabled: enabled, graph: graph, time: time} = state
+  ) do
     editing = false
+    part = :none
 
     graph =
       graph
       |> Graph.modify(:title, &text(&1, title_text(enabled, editing)))
-      |> Graph.modify(:part, &update_opts(&1, hidden: true))
+      |> update_time(time, part)
 
     Backend.set_alarm(day, alarm_tuple(state))
 
-    {%{state | editing: editing, graph: graph}, graph}
+    {%{state | editing: editing, graph: graph, part: part}, graph}
   end
 
   # --------------------------------------------------------
@@ -271,35 +250,35 @@ defmodule AlarmClock.Scene.SetAlarms do
   defp alarm_tuple(%{enabled: false, time: time}), do: {:off, time}
 
   # --------------------------------------------------------
-  defp swap_part(part, graph) do
+  defp swap_part(graph, time, part) do
     part = (part == :hour && :minute) || :hour
-    show_part(part, graph)
+    graph = update_time(graph, time, part)
+    {graph, part}
   end
 
   # --------------------------------------------------------
-  defp show_part(part, graph) do
-    translation = @parts |> Map.get(part)
-
-    graph =
-      Graph.modify(
-        graph,
-        :part,
-        &Primitive.put_transform(&1, :translate, translation)
+  defp update_time(graph, time, part) do
+    graph
+    |> Graph.modify(
+      :time,
+      &Primitive.put(
+        &1,
+        {AlarmClock.Component.Time, {__MODULE__, time, part}}
       )
-
-    {part, graph}
+    )
   end
 
   # --------------------------------------------------------
-  defp change_part(time, part, sign) do
-    {:ok, time} = Time.from_iso8601("#{time}:00")
+  defp change_part({date, _} = old_time, part, sign) do
+    {:ok, time} = Time.from_iso8601("#{Util.format_time(old_time)}:00")
 
-    case part do
-      :hour -> [Time.add(time, 60 * 60 * sign).hour, time.minute]
-      :minute -> [time.hour, Time.add(time, 5 * 60 * sign).minute]
-    end
-    |> Enum.map(&String.pad_leading(to_string(&1), 2, "0"))
-    |> Enum.join(":")
+    [hour, minute] =
+      case part do
+        :hour -> [Time.add(time, 60 * 60 * sign).hour, time.minute]
+        :minute -> [time.hour, Time.add(time, 5 * 60 * sign).minute]
+      end
+
+    {date, {hour, minute, nil}}
   end
 
   # --------------------------------------------------------

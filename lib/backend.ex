@@ -4,19 +4,19 @@ defmodule AlarmClock.Backend do
   defmodule State do
     @alarms %{
       # Monday
-      1 => {:off, "06:00"},
+      1 => {:off, {{nil, nil, nil}, {6, 0, nil}}},
       # Tuesday
-      2 => {:off, "06:00"},
+      2 => {:off, {{nil, nil, nil}, {6, 0, nil}}},
       # Wednesday
-      3 => {:off, "06:00"},
+      3 => {:off, {{nil, nil, nil}, {6, 0, nil}}},
       # Thursday
-      4 => {:off, "06:00"},
+      4 => {:off, {{nil, nil, nil}, {6, 0, nil}}},
       # Friday
-      5 => {:off, "06:00"},
+      5 => {:off, {{nil, nil, nil}, {6, 0, nil}}},
       # Saturday
-      6 => {:off, "06:00"},
+      6 => {:off, {{nil, nil, nil}, {6, 0, nil}}},
       # Sunday
-      7 => {:off, "06:00"}
+      7 => {:off, {{nil, nil, nil}, {6, 0, nil}}}
     }
 
     defstruct alarms: @alarms, subscribers: []
@@ -37,7 +37,7 @@ defmodule AlarmClock.Backend do
   end
 
   def set_alarm(day, {enabled, time} = alarm)
-      when day in 1..7 and enabled in [:on, :off] and is_bitstring(time) do
+      when day in 1..7 and enabled in [:on, :off] and is_tuple(time) do
     GenServer.call(__MODULE__, {:set_alarm, day, alarm})
   end
 
@@ -60,7 +60,7 @@ defmodule AlarmClock.Backend do
         _from,
         %{alarms: alarms} = state
       )
-      when day in 1..7 and enabled in [:on, :off] and is_bitstring(time) do
+      when day in 1..7 and enabled in [:on, :off] and is_tuple(time) do
     alarms = alarms |> Map.put(day, alarm)
     new_state = %{state | alarms: alarms}
 

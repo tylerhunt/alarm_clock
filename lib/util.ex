@@ -40,4 +40,9 @@ defmodule AlarmClock.Util do
 
   # --------------------------------------------------------
   def pad_part(part), do: String.pad_leading(to_string(part), 2, "0")
+
+  # --------------------------------------------------------
+  def format_time({_, {hour, minute, _}}) do
+    "#{pad_part(hour)}:#{pad_part(minute)}"
+  end
 end
