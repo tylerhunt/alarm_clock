@@ -167,8 +167,8 @@ defmodule AlarmClockUI.Scene.SetAlarms do
   end
 
   # --------------------------------------------------------
-  def handle_input(_msg, _, graph) do
-    {:noreply, graph}
+  def handle_input(_message, _context, state) do
+    {:noreply, state}
   end
 
   # ============================================================================

@@ -102,8 +102,7 @@ defmodule AlarmClockUI.Scene.Clock do
   end
 
   # --------------------------------------------------------
-  def handle_input(message, _context, state) do
-    Logger.debug("Input: #{inspect(message)}")
+  def handle_input(_message, _context, state) do
     {:noreply, state}
   end
 
