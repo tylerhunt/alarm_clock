@@ -14,6 +14,8 @@ defmodule AlarmClockUI.Scene.Clock do
 
   @font_size 13
 
+  @enter ["enter", "S"]
+
   # ============================================================================
   # setup
 
@@ -86,10 +88,10 @@ defmodule AlarmClockUI.Scene.Clock do
 
   # --------------------------------------------------------
   def handle_input(
-        {:key, {"enter", :press, 0}},
+        {:key, {key, :press, 0}},
         context,
         %{alarms: alarms, day: day} = state
-      ) do
+      ) when key in @enter do
     alarm = alarms |> Map.get(day)
 
     ViewPort.set_root(

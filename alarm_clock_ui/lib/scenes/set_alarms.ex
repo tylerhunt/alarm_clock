@@ -13,6 +13,9 @@ defmodule AlarmClockUI.Scene.SetAlarms do
 
   @default_part :hour
 
+  @enter ["enter", "S"]
+  @escape ["escape", "A"]
+
   # ============================================================================
   # setup
 
@@ -44,38 +47,38 @@ defmodule AlarmClockUI.Scene.SetAlarms do
 
   # --------------------------------------------------------
   def handle_input(
-        {:key, {"enter", :press, 0}},
+        {:key, {key, :press, 0}},
         _context,
         %{editing: false} = state
-      ) do
+      ) when key in @enter do
     {state, graph} = start_editing(state)
     {:noreply, state, push: graph}
   end
 
   def handle_input(
-        {:key, {"enter", :press, 0}},
+        {:key, {key, :press, 0}},
         _context,
         %{editing: true} = state
-      ) do
+      ) when key in @enter do
     {state, graph} = end_editing(state)
     {:noreply, state, push: graph}
   end
 
   # --------------------------------------------------------
   def handle_input(
-        {:key, {"escape", :press, 0}},
+        {:key, {key, :press, 0}},
         context,
         %{editing: false} = state
-      ) do
+      ) when key in @escape do
     ViewPort.reset(context.viewport)
     {:halt, state}
   end
 
   def handle_input(
-        {:key, {"escape", :press, 0}},
+        {:key, {key, :press, 0}},
         _context,
         %{editing: true} = state
-      ) do
+      ) when key in @escape do
     {state, graph} = end_editing(state)
     {:noreply, state, push: graph}
   end
