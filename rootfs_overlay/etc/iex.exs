@@ -1,3 +1,11 @@
+IO.puts("""
+\e[34m████▄▖    \e[36m▐███
+\e[34m█▌  ▀▜█▙▄▖  \e[36m▐█
+\e[34m█▌ \e[36m▐█▄▖\e[34m▝▀█▌ \e[36m▐█   \e[39mN  E  R  V  E  S
+\e[34m█▌   \e[36m▝▀█▙▄▖ ▐█
+\e[34m███▌    \e[36m▀▜████\e[0m
+""")
+
 # Add Toolshed helpers to the IEx session
 use Toolshed
 
@@ -13,6 +21,3 @@ if RingLogger in Application.get_env(:logger, :backends, []) do
     RingLogger.next
   """)
 end
-
-# Be careful when adding to this file. Nearly any error can crash the VM and
-# cause a reboot.

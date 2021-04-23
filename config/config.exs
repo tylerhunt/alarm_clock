@@ -5,6 +5,9 @@
 # is restricted to this project.
 use Mix.Config
 
+# Enable the Nerves integration with Mix
+Application.start(:nerves_bootstrap)
+
 config :alarm_clock, target: Mix.target()
 
 # Customize non-Elixir parts of the firmware. See
@@ -12,13 +15,10 @@ config :alarm_clock, target: Mix.target()
 
 config :nerves, :firmware, rootfs_overlay: "rootfs_overlay"
 
-# Use shoehorn to start the main application. See the shoehorn
-# docs for separating out critical OTP applications such as those
-# involved with firmware updates.
+# Set the SOURCE_DATE_EPOCH date for reproducible builds.
+# See https://reproducible-builds.org/docs/source-date-epoch/ for more information
 
-config :shoehorn,
-  init: [:nerves_runtime, :nerves_init_gadget],
-  app: Mix.Project.config()[:app]
+config :nerves, source_date_epoch: "1619140953"
 
 # Use Ringlogger as the logger backend and remove :console.
 # See https://hexdocs.pm/ring_logger/readme.html for more information on
@@ -26,10 +26,7 @@ config :shoehorn,
 
 config :logger, backends: [RingLogger]
 
-# Import target specific config. This must remain at the bottom
-# of this file so it overrides the configuration defined above.
-
-if Mix.target() == :host do
+if Mix.target() == :host or Mix.target() == :"" do
   import_config "host.exs"
 else
   import_config "target.exs"

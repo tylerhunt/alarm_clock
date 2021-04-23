@@ -186,7 +186,7 @@ defmodule AlarmClock.Scene.SetAlarms do
   defp time(graph, time) do
     AlarmClock.Component.Time.add_to_graph(
       graph,
-      {__MODULE__, time, :hour},
+      {__MODULE__, time, :none},
       id: :time,
       translate: {@width / 2, @height / 2 - 1}
     )
