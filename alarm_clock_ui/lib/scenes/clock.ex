@@ -24,7 +24,7 @@ defmodule AlarmClockUI.Scene.Clock do
     day = Date.utc_today() |> Date.day_of_week()
 
     alarm = alarms |> Map.get(day)
-    time = :calendar.local_time()
+    time = current_time()
 
     graph =
       Graph.build(font: Font.hash(), font_size: @font_size)
@@ -69,7 +69,7 @@ defmodule AlarmClockUI.Scene.Clock do
 
   # --------------------------------------------------------
   def handle_info(:tick, %{graph: graph, time: old_time} = state) do
-    time = :calendar.local_time()
+    time = current_time()
 
     graph =
       cond do
@@ -154,6 +154,11 @@ defmodule AlarmClockUI.Scene.Clock do
 
   # ============================================================================
   # helpers
+
+  # --------------------------------------------------------
+  def current_time do
+    :calendar.local_time()
+  end
 
   # --------------------------------------------------------
   defp update_alarm(graph, {:on, time}) do
