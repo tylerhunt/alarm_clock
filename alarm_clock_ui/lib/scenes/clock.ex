@@ -1,5 +1,6 @@
 defmodule AlarmClockUI.Scene.Clock do
   use Scenic.Scene
+  require Logger
 
   alias Scenic.ViewPort
   alias Scenic.Graph
@@ -80,6 +81,9 @@ defmodule AlarmClockUI.Scene.Clock do
     {:noreply, %{state | graph: graph, time: time}, push: graph}
   end
 
+  # ============================================================================
+  # event handlers
+
   # --------------------------------------------------------
   def handle_input(
         {:key, {"enter", :press, 0}},
@@ -96,11 +100,9 @@ defmodule AlarmClockUI.Scene.Clock do
     {:halt, state}
   end
 
-  # ============================================================================
-  # event handlers
-
   # --------------------------------------------------------
-  def handle_input(_msg, _context, state) do
+  def handle_input(message, _context, state) do
+    Logger.debug("Input: #{inspect(message)}")
     {:noreply, state}
   end
 
