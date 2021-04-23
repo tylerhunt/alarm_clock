@@ -12,7 +12,7 @@ defmodule AlarmClockUI.Scene.Clock do
   @width 128
   @height 64
 
-  @font_size 13
+  @font_size 14
 
   @enter ["enter", "S"]
 
@@ -31,7 +31,6 @@ defmodule AlarmClockUI.Scene.Clock do
 
     graph =
       Graph.build(font: Font.hash(), font_size: @font_size)
-      |> date(time)
       |> day_of_week(time)
       |> time(time)
       |> alarm(alarm)
@@ -118,19 +117,7 @@ defmodule AlarmClockUI.Scene.Clock do
       {__MODULE__, time},
       id: :alarm,
       hidden: enabled == :off,
-      translate: {@width - 48, @height - 11}
-    )
-  end
-
-  # --------------------------------------------------------
-  defp date(graph, time) do
-    text(
-      graph,
-      format_date(time),
-      id: :date,
-      text_align: :center_top,
-      text_height: 16,
-      translate: {@width / 2, 0}
+      translate: {@width / 2 - 32, @height - 11}
     )
   end
 
@@ -140,9 +127,8 @@ defmodule AlarmClockUI.Scene.Clock do
       graph,
       format_day(time),
       id: :day,
-      text_align: :left_bottom,
-      text_height: 16,
-      translate: {0, @height}
+      text_align: :center_top,
+      translate: {@width / 2, 0}
     )
   end
 
@@ -183,13 +169,7 @@ defmodule AlarmClockUI.Scene.Clock do
       :time,
       &Primitive.put(&1, {AlarmClockUI.Component.Time, {__MODULE__, time}})
     )
-    |> Graph.modify(:date, &text(&1, format_date(time)))
     |> Graph.modify(:day, &text(&1, format_day(time)))
-  end
-
-  # --------------------------------------------------------
-  defp format_date({{year, month, day}, _}) do
-    "#{year}-#{Util.pad_part(month)}-#{Util.pad_part(day)}"
   end
 
   # --------------------------------------------------------

@@ -11,6 +11,7 @@ defmodule AlarmClockUI.Scene.SetAlarms do
   @width 128
   @height 64
 
+  @font_size 14
   @default_part :hour
 
   @enter ["enter", "S"]
@@ -34,10 +35,10 @@ defmodule AlarmClockUI.Scene.SetAlarms do
       }
 
     graph =
-      Graph.build(font: Font.hash(), font_size: 13)
-      |> title(enabled, editing)
-      |> time(time)
+      Graph.build(font: Font.hash(), font_size: @font_size)
       |> day_of_week(day)
+      |> time(time)
+      |> title(enabled, editing)
 
     {:ok, %{state | graph: graph}, push: graph}
   end
@@ -174,13 +175,12 @@ defmodule AlarmClockUI.Scene.SetAlarms do
   # UI elements
 
   # --------------------------------------------------------
-  defp title(graph, enabled, editing) do
+  defp day_of_week(graph, day) do
     text(
       graph,
-      title_text(enabled, editing),
-      id: :title,
+      Util.day_name(day),
+      id: :day,
       text_align: :center_top,
-      text_height: 16,
       translate: {@width / 2, 0}
     )
   end
@@ -196,11 +196,11 @@ defmodule AlarmClockUI.Scene.SetAlarms do
   end
 
   # --------------------------------------------------------
-  defp day_of_week(graph, day) do
+  defp title(graph, enabled, editing) do
     text(
       graph,
-      Util.day_name(day),
-      id: :day,
+      title_text(enabled, editing),
+      id: :title,
       text_align: :center_bottom,
       translate: {@width / 2, @height}
     )

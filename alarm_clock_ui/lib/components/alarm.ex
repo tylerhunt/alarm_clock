@@ -12,7 +12,7 @@ defmodule AlarmClockUI.Component.Alarm do
   @radius @diameter / 2
 
   @color :white
-  @font_size 13
+  @font_size 14
 
   # ============================================================================
   # callbacks
