@@ -1,10 +1,10 @@
-defmodule AlarmClock.Component.Time do
+defmodule AlarmClockUI.Component.Time do
   use Scenic.Component
 
   alias Scenic.Graph
   import Scenic.Primitives
 
-  alias AlarmClock.Util
+  alias AlarmClockUI.{Font, Util}
 
   @font_size 44
   @radius 5
@@ -36,10 +36,10 @@ defmodule AlarmClock.Component.Time do
   def init({scene, time}, opts), do: init({scene, time, :none}, opts)
 
   def init({_scene, time, part}, _opts) do
-    ProFont.load()
+    Font.load()
 
     graph =
-      Graph.build(font: ProFont.hash(), font_size: @font_size)
+      Graph.build(font: Font.hash(), font_size: @font_size)
       |> hour(time)
       |> hour_selection(part)
       |> minute(time)

@@ -9,5 +9,15 @@ An embedded alarm clock project built with Scenic and made to run on a
 ## Running on the Host
 
 ```sh
+cd alarm_clock_ui
 mix do deps.get, scenic.run
+```
+
+## Bootstrapping Target
+
+This will build the firmware and burn it to an SD card.
+
+```sh
+cd alarm_clock
+mix do deps.get, firmware, firmeware.burn
 ```

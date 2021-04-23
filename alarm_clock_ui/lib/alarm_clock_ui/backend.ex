@@ -1,4 +1,4 @@
-defmodule AlarmClock.Backend do
+defmodule AlarmClockUI.Backend do
   use GenServer
 
   defmodule State do

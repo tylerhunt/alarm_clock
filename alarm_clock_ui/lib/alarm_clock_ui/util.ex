@@ -1,4 +1,4 @@
-defmodule AlarmClock.Util do
+defmodule AlarmClockUI.Util do
   @days ~w(
     MONDAY
     TUESDAY

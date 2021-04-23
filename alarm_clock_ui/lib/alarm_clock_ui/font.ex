@@ -1,9 +1,9 @@
-defmodule ProFont do
+defmodule AlarmClockUI.Font do
   @path "static/fonts/ProFont"
 
   # See https://github.com/boydm/scenic/blob/master/guides/custom_fonts.md
   @font_hash "QeaJbshz8-ys7oSCwBv3-KNlhgWIp9hVplx0hFil8h0"
-  @font_metrics_hash :code.priv_dir(:alarm_clock)
+  @font_metrics_hash :code.priv_dir(:alarm_clock_ui)
                      |> Path.join(@path)
                      |> Path.join("ProFontWindows.ttf.metrics")
                      |> Scenic.Cache.Support.Hash.file!(:sha)
@@ -41,7 +41,7 @@ defmodule ProFont do
   end
 
   defp font_folder() do
-    :code.priv_dir(:alarm_clock) |> Path.join(@path)
+    :code.priv_dir(:alarm_clock_ui) |> Path.join(@path)
   end
 
   defp font_metrics() do

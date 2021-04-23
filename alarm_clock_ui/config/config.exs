@@ -6,7 +6,7 @@ use Mix.Config
 config :alarm_clock_ui, :viewport, %{
   name: :main_viewport,
   size: {128, 64},
-  default_scene: {AlarmClockUI.Scene.Home, nil},
+  default_scene: {AlarmClockUI.Scene.Clock, nil},
   drivers: [
     %{
       module: Scenic.Driver.Glfw,

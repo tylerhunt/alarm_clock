@@ -9,6 +9,7 @@ defmodule AlarmClockUI do
 
     # start the application with the viewport
     children = [
+      {AlarmClockUI.Backend, name: AlarmClockUI.Backend},
       {Scenic, viewports: [main_viewport_config]}
     ]
 

@@ -1,4 +1,3 @@
-Readme text goes here
+# Alarm Clock UI
 
-
-From template
+The Scenic portion of the Alarm Clock poncho app.

@@ -1,4 +1,4 @@
-defmodule AlarmClock.Scene.SetAlarms do
+defmodule AlarmClockUI.Scene.SetAlarms do
   use Scenic.Scene
 
   alias Scenic.ViewPort
@@ -6,7 +6,7 @@ defmodule AlarmClock.Scene.SetAlarms do
   alias Scenic.Primitive
   import Scenic.Primitives
 
-  alias AlarmClock.{Backend, Util}
+  alias AlarmClockUI.{Backend, Font, Util}
 
   @width 128
   @height 64
@@ -18,7 +18,7 @@ defmodule AlarmClock.Scene.SetAlarms do
 
   # --------------------------------------------------------
   def init(%{day: day, alarm: {enabled, time}}, _opts) do
-    ProFont.load()
+    Font.load()
 
     %{editing: editing, enabled: enabled} =
       state = %{
@@ -31,7 +31,7 @@ defmodule AlarmClock.Scene.SetAlarms do
       }
 
     graph =
-      Graph.build(font: ProFont.hash(), font_size: 13)
+      Graph.build(font: Font.hash(), font_size: 13)
       |> title(enabled, editing)
       |> time(time)
       |> day_of_week(day)
@@ -184,7 +184,7 @@ defmodule AlarmClock.Scene.SetAlarms do
 
   # --------------------------------------------------------
   defp time(graph, time) do
-    AlarmClock.Component.Time.add_to_graph(
+    AlarmClockUI.Component.Time.add_to_graph(
       graph,
       {__MODULE__, time, :none},
       id: :time,
@@ -263,7 +263,7 @@ defmodule AlarmClock.Scene.SetAlarms do
       :time,
       &Primitive.put(
         &1,
-        {AlarmClock.Component.Time, {__MODULE__, time, part}}
+        {AlarmClockUI.Component.Time, {__MODULE__, time, part}}
       )
     )
   end

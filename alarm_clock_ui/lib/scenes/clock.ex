@@ -1,4 +1,4 @@
-defmodule AlarmClock.Scene.Clock do
+defmodule AlarmClockUI.Scene.Clock do
   use Scenic.Scene
 
   alias Scenic.ViewPort
@@ -6,7 +6,7 @@ defmodule AlarmClock.Scene.Clock do
   alias Scenic.Primitive
   import Scenic.Primitives
 
-  alias AlarmClock.{Backend, Util}
+  alias AlarmClockUI.{Backend, Font, Util}
 
   @width 128
   @height 64
@@ -18,7 +18,7 @@ defmodule AlarmClock.Scene.Clock do
 
   # --------------------------------------------------------
   def init(_state, _opts) do
-    ProFont.load()
+    Font.load()
 
     {:ok, alarms} = Backend.get_alarms()
     day = Date.utc_today() |> Date.day_of_week()
@@ -27,7 +27,7 @@ defmodule AlarmClock.Scene.Clock do
     time = :calendar.local_time()
 
     graph =
-      Graph.build(font: ProFont.hash(), font_size: @font_size)
+      Graph.build(font: Font.hash(), font_size: @font_size)
       |> date(time)
       |> day_of_week(time)
       |> time(time)
@@ -90,7 +90,7 @@ defmodule AlarmClock.Scene.Clock do
 
     ViewPort.set_root(
       context.viewport,
-      {AlarmClock.Scene.SetAlarms, %{alarm: alarm, day: day}}
+      {AlarmClockUI.Scene.SetAlarms, %{alarm: alarm, day: day}}
     )
 
     {:halt, state}
@@ -109,7 +109,7 @@ defmodule AlarmClock.Scene.Clock do
 
   # --------------------------------------------------------
   defp alarm(graph, {enabled, time} = _alarm) do
-    AlarmClock.Component.Alarm.add_to_graph(
+    AlarmClockUI.Component.Alarm.add_to_graph(
       graph,
       {__MODULE__, time},
       id: :alarm,
@@ -144,7 +144,7 @@ defmodule AlarmClock.Scene.Clock do
 
   # --------------------------------------------------------
   defp time(graph, time) do
-    AlarmClock.Component.Time.add_to_graph(
+    AlarmClockUI.Component.Time.add_to_graph(
       graph,
       {__MODULE__, time},
       id: :time,
@@ -172,7 +172,7 @@ defmodule AlarmClock.Scene.Clock do
     graph
     |> Graph.modify(
       :time,
-      &Primitive.put(&1, {AlarmClock.Component.Time, {__MODULE__, time}})
+      &Primitive.put(&1, {AlarmClockUI.Component.Time, {__MODULE__, time}})
     )
     |> Graph.modify(:date, &text(&1, format_date(time)))
     |> Graph.modify(:day, &text(&1, format_day(time)))
