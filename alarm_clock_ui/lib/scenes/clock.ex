@@ -12,7 +12,7 @@ defmodule AlarmClockUI.Scene.Clock do
   @width 128
   @height 64
 
-  @font_size 14
+  @font_size 15
 
   @enter ["enter", "S"]
 
@@ -117,7 +117,7 @@ defmodule AlarmClockUI.Scene.Clock do
       {__MODULE__, time},
       id: :alarm,
       hidden: enabled == :off,
-      translate: {@width / 2 - 32, @height - 11}
+      translate: {@width / 2 - 28, @height - 11}
     )
   end
 
@@ -128,7 +128,7 @@ defmodule AlarmClockUI.Scene.Clock do
       format_day(time),
       id: :day,
       text_align: :center_top,
-      translate: {@width / 2, 0}
+      translate: {@width / 2, -2}
     )
   end
 

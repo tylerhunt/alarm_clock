@@ -12,7 +12,7 @@ defmodule AlarmClockUI.Component.Alarm do
   @radius @diameter / 2
 
   @color :white
-  @font_size 14
+  @font_size 18
 
   # ============================================================================
   # callbacks
@@ -75,7 +75,7 @@ defmodule AlarmClockUI.Component.Alarm do
       fill: @color,
       text_align: :left_top,
       text_height: 16,
-      translate: {@width + 2, -1}
+      translate: {@width + 2, -2}
     )
   end
 end

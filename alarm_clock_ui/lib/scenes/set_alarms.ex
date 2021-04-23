@@ -11,7 +11,7 @@ defmodule AlarmClockUI.Scene.SetAlarms do
   @width 128
   @height 64
 
-  @font_size 14
+  @font_size 15
   @default_part :hour
 
   @enter ["enter", "S"]
@@ -38,7 +38,7 @@ defmodule AlarmClockUI.Scene.SetAlarms do
       Graph.build(font: Font.hash(), font_size: @font_size)
       |> day_of_week(day)
       |> time(time)
-      |> title(enabled, editing)
+      |> mode(enabled, editing)
 
     {:ok, %{state | graph: graph}, push: graph}
   end
@@ -181,7 +181,7 @@ defmodule AlarmClockUI.Scene.SetAlarms do
       Util.day_name(day),
       id: :day,
       text_align: :center_top,
-      translate: {@width / 2, 0}
+      translate: {@width / 2, -2}
     )
   end
 
@@ -196,13 +196,13 @@ defmodule AlarmClockUI.Scene.SetAlarms do
   end
 
   # --------------------------------------------------------
-  defp title(graph, enabled, editing) do
+  defp mode(graph, enabled, editing) do
     text(
       graph,
-      title_text(enabled, editing),
-      id: :title,
+      mode_text(enabled, editing),
+      id: :mode,
       text_align: :center_bottom,
-      translate: {@width / 2, @height}
+      translate: {@width / 2, @height + 2}
     )
   end
 
@@ -213,7 +213,7 @@ defmodule AlarmClockUI.Scene.SetAlarms do
   defp set_alarm(%{editing: editing, enabled: enabled, graph: graph} = state) do
     graph =
       graph
-      |> Graph.modify(:title, &text(&1, title_text(enabled, editing)))
+      |> Graph.modify(:mode, &text(&1, mode_text(enabled, editing)))
 
     {%{state | enabled: enabled, graph: graph}, graph}
   end
@@ -225,7 +225,7 @@ defmodule AlarmClockUI.Scene.SetAlarms do
 
     graph =
       graph
-      |> Graph.modify(:title, &text(&1, title_text(enabled, editing)))
+      |> Graph.modify(:mode, &text(&1, mode_text(enabled, editing)))
       |> update_time(time, part)
 
     {%{state | editing: editing, graph: graph, part: part}, graph}
@@ -240,7 +240,7 @@ defmodule AlarmClockUI.Scene.SetAlarms do
 
     graph =
       graph
-      |> Graph.modify(:title, &text(&1, title_text(enabled, editing)))
+      |> Graph.modify(:mode, &text(&1, mode_text(enabled, editing)))
       |> update_time(time, part)
 
     Backend.set_alarm(day, alarm_tuple(state))
@@ -285,7 +285,7 @@ defmodule AlarmClockUI.Scene.SetAlarms do
   end
 
   # --------------------------------------------------------
-  defp title_text(_, true), do: "ALARM: SET"
-  defp title_text(false, false), do: "ALARM: OFF"
-  defp title_text(true, false), do: "ALARM: ON "
+  defp mode_text(_, true), do: "ALARM: SET"
+  defp mode_text(false, false), do: "ALARM: OFF"
+  defp mode_text(true, false), do: "ALARM: ON "
 end
