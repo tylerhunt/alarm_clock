@@ -20,9 +20,15 @@ disable_splash=1
 gpu_mem=192
 
 # Enable I2C, SPI, and audio
-dtparam=i2c_arm=on
+#dtparam=i2c_arm=on
 dtparam=spi=on
-dtparam=audio=on
+#dtparam=audio=on
+
+# Enable MMAP Support
+dtoverlay=i2s-mmap
+
+# Enable HiFi Berry Device Tree Overlay
+dtoverlay=hifiberry-dac
 
 # Comment this in or modify to enable OneWire
 # NOTE: check that the overlay that you specify is in the boot partition or
