@@ -46,7 +46,7 @@ defmodule AlarmClock.MixProject do
         targets: @all_targets},
 
       # Dependencies for specific targets
-      {:nerves_system_rpi0, "~> 1.13", runtime: false, targets: :rpi0}
+      {:nerves_system_rpi0, "~> 1.16.2", runtime: false, targets: :rpi0}
     ]
   end
 
