@@ -5,6 +5,8 @@ defmodule AlarmClock.Application do
 
   use Application
 
+  alias AlarmClock.Alarm
+
   def start(_type, _args) do
     VintageNetWizard.run_wizard()
 
@@ -31,11 +33,10 @@ defmodule AlarmClock.Application do
     ]
   end
 
-  def children(_target) do
+  def children(:rpi0) do
     [
-      # Children for all targets except host
-      # Starts a worker by calling: AlarmClock.Worker.start_link(arg)
-      # {AlarmClock.Worker, arg},
+      {Alarm, name: Alarm},
+      {Task, fn -> Alarm.play() end}
     ]
   end
 
